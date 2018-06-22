@@ -1,0 +1,37 @@
+FROM debian:latest
+
+#MAJ et DL des paquets
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y sudo
+RUN apt-get install -y nano
+
+############# Ajout du NTP #############
+
+RUN apt-get install ntp -y
+ADD ntp.conf /etc/
+RUN service ntp start
+
+#######################################
+
+############# Sécurité ############# 
+RUN sudo apt-get install iptables -y
+ADD firewall /etc/init.d/
+RUN sudo chmod 700 /etc/init.d/firewall
+#RUN sudo /etc/init.d/firewall
+
+RUN sudo apt-get install -y portsentry 
+ADD portsentry.conf /etc/portsentry/
+RUN sudo portsentry -audp
+RUN sudo portsentry -atcp
+
+RUN sudo apt-get install fail2ban -y
+ADD jail.conf /etc/fail2ban/
+RUN sudo /etc/init.d/fail2ban restart
+
+#RUN sudo apt-get install rkhunter -y
+#ADD rkhunter /etc/default/
+
+RUN sudo apt-get install logwatch -y
+
+#################################### 
