@@ -1,0 +1,75 @@
+FROM debian:latest
+
+# MAJ et DL des paquets
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get upgrade -y
+RUN apt-get install -y nano
+RUN apt-get install -y sudo
+#RUN sudo apt-get install -y wget
+RUN apt-get install ssh -y
+#RUN sudo apt-get install php-mysql
+
+############ Fichier partage ############  
+RUN useradd alexis
+RUN mkdir /home/partage
+RUN chown alexis:alexis /home/partage
+RUN chmod 777 /home/partage
+
+# Installation samba
+RUN apt-get install samba -y
+RUN mv /etc/samba/smb.conf /etc/samba/smb.conf.old 
+
+ADD smb.conf /etc/samba/
+ADD restore.sh /etc/init.d/
+RUN chmod  700 /etc/init.d/restore.sh
+RUN service samba restart
+##########################################
+
+########### Installation Sensu ###########
+# RUN sudo apt-get -y install redis-server apt-transport-https
+# RUN sudo service redis-server start
+# RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
+# RUN sudo dpkg -i erlang-solutions_1.0_all.deb
+# RUN wget -O- https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc |  sudo apt-key add -
+# RUN sudo apt-get update && sudo apt-get install -y socat erlang-nox=1:19.3-1
+# RUN wget http://www.rabbitmq.com/releases/rabbitmq-server/v3.6.10/rabbitmq-server_3.6.10-1_all.deb
+# RUN sudo dpkg -i rabbitmq-server_3.6.10-1_all.deb
+# RUN sudo apt-get update && sudo apt-get install -y rabbitmq-server
+# RUN sudo service rabbitmq-server start
+# RUN sudo rabbitmqctl add_vhost /sensu
+# RUN sudo rabbitmqctl add_user sensu sensu
+# RUN sudo rabbitmqctl set_permissions -p /sensu sensu ".*" ".*" ".*"
+# RUN wget -O- https://sensu.global.ssl.fastly.net/apt/pubkey.gpg |  sudo apt-key add -
+# RUN echo "deb https://sensu.global.ssl.fastly.net/apt sensu main" | sudo tee /etc/apt/sources.list.d/sensu.list
+# RUN sudo apt-get update 
+# RUN sudo apt-get install -y sensu
+# RUN sudo nano /etc/sensu/conf.d/rabbitmq.json
+# ADD rabbitmq.json /etc/sensu/conf.d/
+# ADD redis.json /etc/sensu/conf.d/
+# ADD api.json /etc/sensu/conf.d/
+##########################################
+
+
+############# Sécurité #############
+RUN sudo apt-get install iptables -y
+ADD firewall /etc/init.d/
+RUN sudo chmod 700 /etc/init.d/firewall
+# RUN sudo /etc/init.d/firewall
+
+RUN sudo apt-get install -y portsentry
+ADD portsentry.conf /etc/portsentry/
+RUN sudo portsentry -audp
+RUN sudo portsentry -atcp
+
+RUN sudo apt-get install fail2ban -y
+ADD jail.conf /etc/fail2ban/
+RUN sudo /etc/init.d/fail2ban restart
+
+#RUN sudo apt-get install rkhunter -y
+#ADD rkhunter /etc/default/
+
+RUN sudo apt-get install logwatch -y
+
+####################################
+

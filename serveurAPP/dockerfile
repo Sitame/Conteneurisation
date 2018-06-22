@@ -1,0 +1,95 @@
+FROM debian:latest
+
+#MAJ et DL des paquets
+RUN rm /etc/apt/sources.list
+ADD sources.list /etc/apt/
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y sudo 
+RUN apt-get install -y apache2
+RUN apt-get install -y php
+#RUN sudo apt-get install mariadb-server -y
+RUN apt-get install -y nano
+RUN apt-get install ssh -y
+RUN apt-get install php-mysql -y
+
+############### Installation MariaDB ###############
+RUN apt-get remove -y --purge mysql-server mysql-client mysql-common
+RUN apt-get autoremove -y
+RUN apt-get autoclean -y
+RUN rm -rf /var/lib/mysql
+RUN apt-get install -y mariadb-server
+#RUN service mysql start
+##############################################
+
+
+############### Ajout des fichiers ###############
+ADD bddsql.sh /etc/init.d/
+ADD backup.sh /etc/init.d/
+ADD adminer.php /var/www/html/
+ADD site /var/www/html/
+ADD voyage_backup.sql /var/www/html/
+ADD voyage_backup2.sql /etc/init.d/
+ADD sql.sh /etc/init.d/
+###### Droits accès ######
+RUN mkdir /home/sauvegarde
+RUN chmod 777 /home/sauvegarde
+RUN chmod 700 /etc/init.d/backup.sh
+RUN chmod 700 /etc/init.d/bddsql.sh
+##################################################
+
+
+########### Création BDD et USER ###########
+#RUN cd /etc/init.d/
+#RUN /etc/init.d/mysql restart
+#RUN sudo  mysql -u root < /etc/init.d/sql.sh
+############################################
+
+
+############# Sécurité #############
+RUN sudo apt-get install iptables -y
+ADD firewall /etc/init.d/
+RUN sudo chmod 700 /etc/init.d/firewall
+#RUN sudo /etc/init.d/firewall
+
+RUN sudo apt-get install -y portsentry
+ADD portsentry.conf /etc/portsentry/
+RUN sudo portsentry -audp
+RUN sudo portsentry -atcp
+
+RUN sudo apt-get install fail2ban -y
+ADD jail.conf /etc/fail2ban/
+RUN sudo /etc/init.d/fail2ban restart
+
+#RUN sudo apt-get install rkhunter -y
+#ADD rkhunter /etc/default/
+
+RUN sudo apt-get install logwatch -y
+####################################
+
+
+################Création BDDMariaDB################
+#RUN sudo /etc/init.d/mysql start
+#RUN mariadb
+#RUN create database voyage;
+
+#Création d'un utilisateur admin dans MariaDB
+#RUN CREATE USER voyageur@localhost IDENTIFIED BY 'voyageur';
+#RUN GRANT ALL PRIVILEGES ON voyage. * TO voyageur@localhost WITH GRANT OPTION;
+#RUN Flush privileges ;
+#RUN exit;
+##################################################
+
+############### Facultatif ############### 
+#RUN mv /var/www/html/site/Controleur.php /var/www/html/
+#RUN mv /var/www/html/site/Images /var/www/html/
+#RUN mv /var/www/html/site/index.html /var/www/html/
+#RUN mv /var/www/html/site/index.php /var/www/html/
+#RUN mv /var/www/html/site/Modeles /var/www/html/
+#RUN mv /var/www/html/site/styleVoyage.css /var/www/html/
+#RUN mv /var/www/html/site/testbase.sql.20180531 /var/www/html/
+#RUN mv /var/www/html/site/voyage_backup.sql /var/www/html/
+#RUN mv /var/www/html/site/voyinc.sql /var/www/html/
+#RUN mv /var/www/html/site/voyin.sql /var/www/html/
+#RUN mv /var/www/html/site/Vues /var/www/html/
+########################## ############### 

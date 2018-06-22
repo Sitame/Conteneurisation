@@ -1,0 +1,49 @@
+FROM debian:latest
+
+#MAJ et DL des paquets
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y nano
+RUN apt-get install -y sudo
+RUN sudo apt-get install -y apache2
+RUN sudo apt-get install -y php
+RUN sudo apt-get install -y mysql-server
+#RUN sudo apt-get install -y phpmyadmin
+
+
+########## Installation Postfix ##########
+#RUN sudo apt-get purge 'exim*'
+#RUN sudo apt-get install -y postfix
+#RUN sudo apt-get install -y postfix-mysql
+#RUN sudo apt-get install -y libsasl-modules
+#RUN sudo apt-get install -y sasl2-bin 
+#RUN sudo apt-get install -y postfixadmin
+#RUN sudo apt-get install -y dovecot-mysql
+#RUN sudo apt-get install -y dovecot-pop3d
+#RUN sudo apt-get install -y dovecot-imapd
+#RUN sudo apt-get install -y dovecot-managesieved
+##########################################
+
+
+############# Sécurité #############
+RUN sudo apt-get install iptables -y
+ADD firewall /etc/init.d/
+RUN sudo chmod 700 /etc/init.d/firewall
+#RUN sudo /etc/init.d/firewall
+
+RUN sudo apt-get install -y portsentry
+ADD portsentry.conf /etc/portsentry/
+RUN sudo portsentry -audp
+RUN sudo portsentry -atcp
+
+RUN sudo apt-get install fail2ban -y
+ADD jail.conf /etc/fail2ban/
+RUN sudo /etc/init.d/fail2ban restart
+
+#RUN sudo apt-get install rkhunter -y
+#ADD rkhunter /etc/default/
+
+RUN sudo apt-get install logwatch -y
+
+####################################
+
